@@ -1,47 +1,49 @@
 <template>
-  <div class="container">
-    <div class="menu">
-      <div class="buttons">
-        <SButton color="green" class="button_blue" @click="openAdd">
-          Добавить
-        </SButton>
-        <SButton color="green" outlined class="button_blue" @click="resetAllRatings">
-          Сбросить весь рейтинг
-        </SButton>
-      </div>
-      <div class="statistic">
+  <BaseLayout>
+      <div class="container">
+          <div class="menu">
+              <div class="buttons">
+                  <SButton color="green" class="button_blue" @click="openAdd">
+                      Добавить
+                  </SButton>
+                  <SButton color="green" outlined class="button_blue" @click="resetAllRatings">
+                      Сбросить весь рейтинг
+                  </SButton>
+              </div>
+              <div class="statistic">
           <span>
             Всего книг: <span class="value"> {{ books.length }} </span>
           </span>
-        <span>
+                  <span>
             Средний рейтинг: <span class="value"> {{ averageRating }} </span>
           </span>
+              </div>
+          </div>
+          <div class="catalog">
+              <BookCard
+                  v-for="(book) in books"
+                  :key="book.id"
+                  :book
+                  :genreList="genresList"
+                  @edit="handleEditBook"
+                  @delete="handleDeleteBook"
+              />
+          </div>
       </div>
-    </div>
-    <div class="catalog">
-      <BookCard
-          v-for="(book) in books"
-          :key="book.id"
-          :book
-          :genreList="genresList"
-          @edit="handleEditBook"
-          @delete="handleDeleteBook"
-      />
-    </div>
-  </div>
-  <SDialog
-      v-model="isModalOpen"
-      :title="isAddOpen ? 'Добавить книгу' : 'Редактировать книгу'"
-      width="500px"
-  >
-    <BookForm
-        v-model="formBook"
-        v-if="isModalOpen"
-        :genresList="genresList"
-        @submit="handleSubmit"
-        @cancel="closeModal"
-    />
-  </SDialog>
+      <SDialog
+          v-model="isModalOpen"
+          :title="isAddOpen ? 'Добавить книгу' : 'Редактировать книгу'"
+          width="500px"
+      >
+          <BookForm
+              v-model="formBook"
+              v-if="isModalOpen"
+              :genresList="genresList"
+              @submit="handleSubmit"
+              @cancel="closeModal"
+          />
+      </SDialog>
+  </BaseLayout>
 </template>
 
 <script setup>
@@ -50,6 +52,7 @@ import {computed, ref, watch} from "vue";
 import {SButton, SDialog} from "startup-ui";
 import BookCard from "./BookCard.vue";
 import BookForm from "./BookForm.vue";
+import BaseLayout from "../../layouts/BaseLayout.vue";
 
 const genresList = [
   {value: 'fantasy', label: 'Фэнтези'},
