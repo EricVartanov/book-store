@@ -15,7 +15,6 @@ class Book extends Model
         'cover',
         'author_id',
         'adult',
-        'rating',
         'user_id',
     ];
 

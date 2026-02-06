@@ -61,9 +61,11 @@ const props = defineProps({
 })
 
 const user = page.props.auth?.user;
-const isUsersBookOrAdmin = computed(() =>
-    user.id === props.book.author_id || user.role === 'admin'
-)
+const isUsersBookOrAdmin = computed(() => {
+    if (!user) return false
+
+    return user.id === props.book.author_id || user.role === 'admin'
+})
 const genreLabels = computed(() => {
     return props.book.genres.map(genre => genre.name)
 })

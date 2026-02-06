@@ -61,7 +61,6 @@ class BookController extends Controller
             ...$request->safe()->except(['genres', 'cover']),
             'cover' => $coverPath,
             'author_id' => auth()->id(),
-            'rating' => 0,
         ]);
 
         if ($request->filled('genres')) {
