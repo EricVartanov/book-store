@@ -3,7 +3,9 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -21,6 +23,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'email_verified_at',
+        'remember_token',
     ];
 
     /**
@@ -45,4 +50,34 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function books(): HasMany
+    {
+        return $this->hasMany(Book::class, 'author_id');
+    }
+
+    public function scopeFilter(Builder $query, array $filters): Builder
+    {
+        $query
+            // Перечисление полей для фильтрации
+            ->when(isset($filters['role']), function ($query) use ($filters) {
+                $query->where('role', $filters['role']);
+            })
+            ->when(isset($filters['q']), function ($query) use ($filters) {
+                $q = $filters['q'];
+
+                if ($q !== null and $q !== '') {
+                    if (str_starts_with($q, '@')) {
+                        $query->where('name', ltrim($q, '@'));
+                    } elseif (str_contains($q, '@')) {
+                        $query->where('email', 'like', "%{$q}%");
+                    } else {
+                        $query->where('name', 'like', "%{$q}%");
+                    }
+                }
+            });
+
+        return $query;
+    }
+
 }

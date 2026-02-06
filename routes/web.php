@@ -1,23 +1,22 @@
 <?php
 
-use App\Http\Controllers\ContactController;
-use App\Http\Controllers\PagesController;
+use App\Http\Controllers\BookController;
+use App\Http\Controllers\BookRatingController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Page/Home');
-});
+Route::get('/', [BookController::class, 'index'])->name('home');
 
-Route::get('/about', [PagesController::class, 'about'])->name('about');
+Route::get('/login/', [UserController::class, 'login'])->name('login');
+Route::post('/login/', [UserController::class, 'loginPost']);
 
-Route::get('/profile', function () {
-    return Inertia::render('Page/Profile');
-})->name('profile');
+Route::middleware('auth')->group(function () {
+    Route::post('/logout/', [UserController::class, 'logout'])->name('logout');
+    Route::get('/dashboard/', [UserController::class, 'dashboard'])->name('dashboard');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Page/Dashboard');
-})->name('dashboard');
+    Route::resource('books', BookController::class);
+    Route::resource('users', UserController::class);
 
-Route::post('/contact', [ContactController::class, 'store'])->name('contact');
+    Route::post('/books/{book}/rating', [BookRatingController::class, 'store'])->name('books.rate');
+})->where(['user' => '[a-zA-Z0-9]+']);
 

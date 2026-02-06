@@ -1,154 +1,172 @@
 <template>
-  <SForm class="form" v-model="form" @submit="submit" method="post" action="/users/login">
-    <SFormRow name="title">
-      <SInput placeholder="Название" ref="name-input" autofocus/>
-    </SFormRow>
-    <SFormRow name="description">
-      <SInput type="textarea" placeholder="Описание"/>
-    </SFormRow>
-    <multiselect
-        v-model="selectedGenres"
-        :options="genresList"
-        track-by="value"
-        label="label"
-        :multiple="true"
-        :close-on-select="false"
-        placeholder="Выберите жанры"
-        select-label=""
-        deselect-label=""
-        selected-label=""
-        class="genre-multiselect"
-        open-direction="bottom"
-    />
-    <SFormRow name="cover">
-      <SUpload v-model="form.cover" upload-button-title="Выбрать обложку"/>
-    </SFormRow>
-    <SFormRow name="adult">
-      <SCheckbox v-model="form.adult">18+</SCheckbox>
-    </SFormRow>
-    <div class="actions">
-      <SButton class="submit-btn" color="green">Сохранить</SButton>
-      <SButton class="cancel-btn" color="red" @click="$emit('cancel')">Отмена</SButton>
-    </div>
-  </SForm>
+    <SForm v-model="form" class="form" @submit="submit">
+        <SFormRow>
+            <SInput v-model="form.title" placeholder="Название" />
+        </SFormRow>
+
+        <SFormRow>
+            <SInput
+                v-model="form.description"
+                type="textarea"
+                placeholder="Описание"
+            />
+        </SFormRow>
+
+        <SFormRow>
+            <SCheckbox v-model="form.adult">18+</SCheckbox>
+        </SFormRow>
+
+        <multiselect
+            v-model="selectedGenres"
+            :options="genres"
+            @update:modelValue="form.genres = $event.map(v => v.value)"
+            track-by="value"
+            label="label"
+            :multiple="true"
+            :close-on-select="false"
+            placeholder="Выберите жанры"
+            select-label=""
+            deselect-label=""
+            selected-label=""
+            class="genre-multiselect"
+            open-direction="bottom"
+        />
+
+        <SUpload v-model="form.cover" />
+
+        <div class="actions">
+            <SButton color="green" type="submit" :loading="form.processing">
+                Сохранить
+            </SButton>
+
+            <SButton color="red" type="button" @click="emit('close')">
+                Отмена
+            </SButton>
+        </div>
+    </SForm>
 </template>
 
 <script setup>
-import {computed, nextTick, onMounted, reactive, useTemplateRef, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
+import { useForm } from '@inertiajs/vue3'
+import {SForm, SFormRow, SInput, SCheckbox, SButton, SUpload} from 'startup-ui'
 import Multiselect from "vue-multiselect";
 import 'vue-multiselect/dist/vue-multiselect.css'
-import {debounce} from "lodash/function";
-import {SButton, SCheckbox, SForm, SFormRow, SInput, SUpload} from "startup-ui";
 
 const props = defineProps({
-  modelValue: {
-    type: Object,
-    required: true
-  },
-  genresList: {
-    type: Array,
-    required: true
-  },
+    book: {
+        type: Object,
+        default: null,
+    },
+    genres: {
+        type: Array,
+        default: () => [],
+    },
 })
 
-const emit = defineEmits([
-  'update:modelValue',
-  'submit',
-  'cancel'
-])
-const form = reactive({...props.modelValue})
+const emit = defineEmits(['close'])
+
+const form = useForm({
+    title: '',
+    description: '',
+    adult: false,
+    genres: [],
+    cover: null,
+})
+
+const selectedGenres = ref([])
+
 
 watch(
-    () => props.modelValue,
-    (value) => {
-      Object.assign(form, value)
+    () => props.book,
+    (book) => {
+        if (!book) {
+            form.reset()
+            selectedGenres.value = []
+            return
+        }
+
+        form.title = book.title ?? ''
+        form.description = book.description ?? ''
+        form.adult = !!book.adult
+        form.cover = book.cover ?? null
+
+        selectedGenres.value = book.genres.map(g => ({
+            label: g.name,
+            value: g.slug,
+        }))
+
+        form.genres = book.genres.map(g => g.slug)
     },
-    {deep: true}
+    { immediate: true }
 )
 
-const nameInput = useTemplateRef('name-input')
-
-const focusNameInput = async () => {
-  await nextTick()
-  nameInput.value?.$el?.querySelector('input')?.focus()
-}
-
-onMounted(() => {
-  focusNameInput()
-})
-
-const selectedGenres = computed({
-  get() {
-    return props.genresList.filter(g =>
-        form.genre.includes(g.value)
-    )
-  },
-  set(values) {
-    form.genre = values.map(v => v.value)
-  }
-})
-
-
-//знаю костыльно, но не понимаю как решить вопрос с вочерами на форму,
-let firstInit = true
-//задание 5 дня
-watch(
-    () => form.title,
-    (newValue) => {
-      if (firstInit) {
-        firstInit = false
-        return
-      }
-      sendTitleToServer(newValue)
-    },
+const genres = computed(() =>
+    props.genres.map(g => ({
+        label: g.name,
+        value: g.slug,
+    }))
 )
 
-const sendTitleToServer = debounce((value) => {
-  console.log(`Отправили ${value} на сервер`)
-}, 500)
+function submit() {
+    form.transform((data) => {
+        const payload = { ...data }
 
+        // отправляем cover ТОЛЬКО если это новый файл
+        if (!(payload.cover instanceof File)) {
+            delete payload.cover
+        }
 
-const submit = () => {
-  emit('update:modelValue', {...form})
-  emit('submit', {...form})
+        return payload
+    })
+
+    if (props.book) {
+        form.patch(`/books/${props.book.id}`, {
+            onSuccess: () => emit('close'),
+        })
+    } else {
+        form.post('/books', {
+            onSuccess: () => emit('close'),
+        })
+    }
 }
 </script>
 
 <style>
 .form {
-  .actions {
-    display: flex;
-    margin-top: 20px;
-    justify-content: space-between;
+    .actions {
+        display: flex;
+        margin-top: 20px;
+        justify-content: space-between;
 
-    button {
-      &:hover {
-        transition: 0.3s;
-        opacity: 0.5;
-      }
+        .button {
+            &:hover {
+                transition: 0.3s;
+                opacity: 0.5;
+            }
+        }
     }
-  }
 }
 
 </style>
 
 <style scoped>
 .genre-multiselect :deep(.multiselect__tag) {
-  background: var(--s-green);
-  color: var(--s-white);
+    background: var(--s-green);
+    color: var(--s-white);
 }
 
 .genre-multiselect :deep(.multiselect__option--highlight) {
-  background: var(--s-green);
-  color: var(--s-white);
+    background: var(--s-green);
+    color: var(--s-white);
 }
 
 .genre-multiselect :deep(.multiselect__option--selected) {
-  background: rgba(0, 128, 0, 0.15);
-  color: var(--s-black);
+    background: rgba(0, 128, 0, 0.15);
+    color: var(--s-black);
 }
 
 .genre-multiselect :deep(.multiselect__tag-icon:hover) {
-  background: #0f8f3a;
+    background: #0f8f3a;
 }
 </style>
