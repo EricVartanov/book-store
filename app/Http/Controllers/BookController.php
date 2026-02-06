@@ -18,16 +18,20 @@ class BookController extends Controller
      */
     public function index()
     {
-        $books = Book::with('genres')->get();
+        $books = Book::with('genres')
+            ->withAvg('ratings', 'rating')
+            ->withExists([
+                'ratings as user_rated' => fn ($q) =>
+                $q->where('user_id', auth()->id())
+            ])
+            ->get();
         $genres = Genre::all();
         $booksCount = Book::count();
-        $averageRating = round(Book::avg('rating'), 1);
 
         return Inertia::render('Page/Home', [
             'books' => $books,
             'genres' => $genres,
             'booksCount' => $booksCount,
-            'averageRating' => $averageRating
         ]);
     }
 

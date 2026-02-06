@@ -25,11 +25,6 @@ const form = useForm({
     email: '',
     password: '',
 });
-
-const submit = () => {
-    console.log('111');
-    form.post(route('login'));
-};
 </script>
 
 <style scoped>

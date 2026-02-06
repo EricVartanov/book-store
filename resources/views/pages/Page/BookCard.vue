@@ -23,15 +23,14 @@
             <p class="description">
                 {{ book.description }}
             </p>
-            <div v-if="user" :class="['stars', { disabled: rated }]">
+            <div v-if="user && !rated" :class="['stars', { disabled: rated }]">
                 <SActionIcon
-                    icon="star"
                     v-for="i in 5"
                     :key="i"
-                    :class="['star', { active: i <= (userRating || hoverRating) }, {disabled: rated}]"
-                    :icon="['fas', 'star']"
-                    @mouseenter="!userRating && (hoverRating = i)"
-                    @mouseleave="!userRating && (hoverRating = 0)"
+                    icon="star"
+                    :class="['star', { active: i <= (hoverRating || 0) }, { disabled: rated }]"
+                    @mouseenter="!rated && (hoverRating = i)"
+                    @mouseleave="!rated && (hoverRating = 0)"
                     @click="setRating(i)"
                 />
             </div>
@@ -47,7 +46,7 @@
 <script setup>
 import {computed, ref} from "vue";
 import {SActionIcon, SConfirm, STag} from "startup-ui";
-import {usePage} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 
 const page = usePage();
 
@@ -69,14 +68,19 @@ const genreLabels = computed(() => {
     return props.book.genres.map(genre => genre.name)
 })
 
-const currentRating = computed(() => props.book.rating ?? 0)
-const userRating = ref(0)
+const currentRating = computed(() =>
+    props.book.ratings_avg_rating ?? 0
+)
 const hoverRating = ref(0)
 
-const rated = computed(() => userRating.value >= 1)
+const rated = computed(() => props.book.user_rated)
 const setRating = (value) => {
     if (rated.value) return
-    userRating.value = value
+
+    router.post(`books/${props.book.id}/rating`,
+        {rating: value},
+        {preserveScroll: true}
+    )
 }
 
 function deleteBook(bookId) {
@@ -101,8 +105,6 @@ const coverUrl = computed(() => {
     // storage
     return `/storage/${props.book.cover}`
 })
-
-
 </script>
 
 <style>

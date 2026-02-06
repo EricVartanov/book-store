@@ -16,6 +16,11 @@ class Book extends Model
         'author_id',
         'adult',
         'rating',
+        'user_id',
+    ];
+
+    protected $casts = [
+        'ratings_avg_rating' => 'decimal:1',
     ];
 
     //жанры
@@ -28,5 +33,15 @@ class Book extends Model
     public function author()
     {
         return $this->belongsTo(User::class, 'author_id');
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(BookRating::class);
+    }
+
+    public function averageRating()
+    {
+        return round($this->ratings()->avg('rating'), 1);
     }
 }
