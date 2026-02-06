@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Book;
+use App\Models\User;
 use Inertia\Inertia;
 
 class PagesController extends Controller
 {
     public function home()
     {
-        return Inertia::render('Page/Home');
+        return Inertia::render('/Page/Home');
     }
 
     public function about()
