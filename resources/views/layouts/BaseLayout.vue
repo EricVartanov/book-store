@@ -3,10 +3,44 @@
         <header class="header">
             <nav class="header-nav">
                 <Link class="header-nav-link" href="/">Домой</Link>
-                <Link class="header-nav-link" href="/about">О Нас</Link>
+                <Link
+                    v-if="!user"
+                    class="header-nav-link"
+                    href="/login"
+                >
+                    Войти
+                </Link>
+                <!-- ЗАЛОГИНЕН -->
+                <template v-else>
+                    <Link
+                        class="header-nav-link"
+                        href="/dashboard"
+                    >
+                        Мои книги
+                    </Link>
 
-                <Link class="header-nav-link" href="/profile">Profile</Link>
-                <Link class="header-nav-link" href="/dashboard">Dashboard</Link>
+                    <Link
+                        v-if="isAdmin"
+                        class="header-nav-link"
+                        href="/users"
+                    >
+                        Пользователи
+                    </Link>
+                    <Link
+                        class="header-nav-link"
+                        :href="`/users/${user.id}/`"
+                    >
+                        Моя карточка
+                    </Link>
+
+                    <Link
+                        class="header-nav-link"
+                        href="/logout"
+                        method="post"
+                    >
+                        Выйти
+                    </Link>
+                </template>
             </nav>
         </header>
         <main class="main">
@@ -18,8 +52,13 @@
     </div>
 </template>
 <script setup>
-import {Link} from "@inertiajs/vue3";
+import { Link, usePage } from "@inertiajs/vue3";
+import { computed } from "vue";
 
+const page = usePage();
+const user = page.props.auth?.user;
+
+const isAdmin = computed(() => user?.role === 'admin');
 </script>
 
 
@@ -69,6 +108,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .main {
     margin-top: 2rem;
+    padding: 20px;
 }
 
 </style>

@@ -2,22 +2,20 @@
     <BaseLayout>
         <div class="container">
             <div class="menu">
+                <h2>
+                    Мои книги
+                </h2>
                 <div class="buttons">
                     <SButton color="green" @click="openCreate">
                         Добавить
                     </SButton>
                 </div>
-
                 <div class="statistic">
-          <span>
-            Всего книг: <span class="value">{{ booksCount }}</span>
-          </span>
                     <span>
-            Средний рейтинг: <span class="value">{{ averageRating }}</span>
-          </span>
+                    Всего книг: <span class="value"> {{ booksCount }} </span>
+                    </span>
                 </div>
             </div>
-
             <div class="catalog">
                 <BookCard
                     v-for="book in books"
@@ -28,7 +26,6 @@
                 />
             </div>
         </div>
-
         <SDialog
             v-model="isModalOpen"
             :title="editingBook ? 'Редактировать книгу' : 'Добавить книгу'"
@@ -48,10 +45,10 @@
 <script setup>
 import {ref} from "vue";
 import {SAlert, SButton, SDialog} from "startup-ui";
-import BookCard from "./BookCard.vue";
+import BookCard from "../Page/BookCard.vue";
 import BaseLayout from "../../layouts/BaseLayout.vue";
-import BookForm from "./BookForm.vue";
-import {router, usePage} from "@inertiajs/vue3";
+import BookForm from "../Page/BookForm.vue";
+import {router} from "@inertiajs/vue3";
 
 const props = defineProps({
     books: Array,

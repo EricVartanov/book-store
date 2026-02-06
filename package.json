@@ -26,6 +26,7 @@
         "startup-ui": "^0.5.11",
         "tinymce": "^6.8.6",
         "vue": "^3.4.36",
+        "vue-i18n": "^9.14.5",
         "vue-multiselect": "^3.4.0"
     }
 }

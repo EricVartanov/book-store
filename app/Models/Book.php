@@ -12,7 +12,10 @@ class Book extends Model
     protected $fillable = [
         'title',
         'description',
-        'image',
+        'cover',
+        'author_id',
+        'adult',
+        'rating',
     ];
 
     //жанры
